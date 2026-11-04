@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MoodPulse – Feel Your Vibe</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0a0a12;
+      --card: #12121e;
+      --card2: #1a1a2e;
+      --accent: #7f5af0;
+      --accent2: #2cb67d;
+      --danger: #ef4565;
+      --warn: #fbbf24;
+      --text: #fffffe;
+      --muted: #94a1b2;
+      --border: rgba(127,90,240,0.18);
+      --glow: rgba(127,90,240,0.25);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    /* Animated background blobs */
+    .bg-blobs {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    }
+    .blob {
+      position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.18;
+      animation: blobMove 12s ease-in-out infinite alternate;
+    }
+    .blob1 { width: 420px; height: 420px; background: var(--accent); top: -100px; left: -100px; animation-delay: 0s; }
+    .blob2 { width: 320px; height: 320px; background: var(--accent2); bottom: -80px; right: -80px; animation-delay: 4s; }
+    .blob3 { width: 200px; height: 200px; background: var(--danger); top: 40%; left: 55%; animation-delay: 2s; }
+    @keyframes blobMove {
+      0% { transform: scale(1) translate(0,0); }
+      100% { transform: scale(1.18) translate(30px, 20px); }
+    }
+
+    /* HEADER */
+    header {
+      position: relative; z-index: 10;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 24px 40px;
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(8px);
+    }
+    .logo { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800; letter-spacing: -1px; }
+    .logo span { color: var(--accent); }
+    .status-dot {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.78rem; color: var(--muted);
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent2); animation: pulse-dot 1.5s ease-in-out infinite; }
+    @keyframes pulse-dot { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+
+    /* MAIN GRID */
+    main {
+      position: relative; z-index: 5;
+      max-width: 1100px; margin: 0 auto; padding: 40px 24px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto auto auto;
+      gap: 20px;
+    }
+
+    /* CARDS */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 40px var(--glow);
+    }
+    .card-label {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 14px;
+    }
+    .card-value {
+      font-family: 'Syne', sans-serif; font-size: 3rem; font-weight: 800;
+      line-height: 1; letter-spacing: -2px;
+    }
+    .card-unit { font-size: 1rem; color: var(--muted); font-weight: 400; margin-left: 4px; }
+    .card-sub { font-size: 0.82rem; color: var(--muted); margin-top: 10px; }
+
+    /* HEART RATE CARD */
+    #card-hr { grid-column: 1; }
+    .hr-value { color: var(--danger); }
+    .hr-bar-wrap { margin-top: 18px; height: 48px; display: flex; align-items: flex-end; gap: 3px; }
+    .hr-bar {
+      flex: 1; background: var(--danger);
+      border-radius: 3px 3px 0 0;
+      transition: height 0.4s cubic-bezier(.4,2,.6,1);
+      opacity: 0.7;
+    }
+
+    /* SLEEP CARD */
+    #card-sleep { grid-column: 2; }
+    .sleep-value { color: var(--accent); }
+    .sleep-ring-wrap { display: flex; justify-content: center; margin-top: 12px; }
+    svg.sleep-ring { transform: rotate(-90deg); }
+    .ring-bg { fill: none; stroke: var(--card2); stroke-width: 10; }
+    .ring-fill { fill: none; stroke: var(--accent); stroke-width: 10; stroke-linecap: round;
+      transition: stroke-dashoffset 1s ease; }
+
+    /* BP CARD */
+    #card-bp { grid-column: 1; }
+    .bp-value { color: var(--accent2); }
+    .bp-bars { display: flex; gap: 16px; margin-top: 16px; }
+    .bp-bar-group { flex: 1; }
+    .bp-bar-label { font-size: 0.7rem; color: var(--muted); margin-bottom: 4px; }
+    .bp-track { background: var(--card2); border-radius: 6px; height: 10px; overflow: hidden; }
+    .bp-fill { height: 100%; border-radius: 6px; transition: width 1s ease; }
+    .bp-fill.sys { background: var(--accent2); }
+    .bp-fill.dia { background: var(--accent); }
+
+    /* SPO2 CARD */
+    #card-spo2 { grid-column: 2; }
+    .spo2-value { color: #60a5fa; }
+
+    /* STEPS */
+    #card-steps { grid-column: 1; }
+    .steps-value { color: var(--warn); }
+    .steps-bar-outer { background: var(--card2); border-radius: 8px; height: 12px; margin-top: 14px; overflow: hidden; }
+    .steps-bar-inner { height: 100%; border-radius: 8px; background: linear-gradient(90deg, var(--warn), #f97316); transition: width 1s ease; }
+
+    /* MOOD CARD — full width */
+    #card-mood {
+      grid-column: 1 / -1;
+      background: var(--card2);
+      border: 1.5px solid var(--accent);
+      box-shadow: 0 0 60px var(--glow);
+    }
+    .mood-header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+    .mood-emoji { font-size: 3.5rem; line-height: 1; animation: floatEmoji 3s ease-in-out infinite; }
+    @keyframes floatEmoji { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-8px);} }
+    .mood-title { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; }
+    .mood-sub { color: var(--muted); font-size: 0.9rem; margin-top: 4px; }
+    .mood-message {
+      background: rgba(127,90,240,0.1);
+      border-left: 4px solid var(--accent);
+      border-radius: 0 12px 12px 0;
+      padding: 16px 20px;
+      font-size: 1.05rem;
+      line-height: 1.7;
+      color: #d4d8e8;
+      margin-bottom: 16px;
+      min-height: 64px;
+    }
+    .mood-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .mood-tag {
+      background: rgba(127,90,240,0.15);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 4px 14px;
+      font-size: 0.78rem;
+      color: var(--accent);
+    }
+
+    /* CONTROLS */
+    #controls {
+      grid-column: 1 / -1;
+      display: flex; gap: 14px; align-items: center; flex-wrap: wrap;
+    }
+    .btn {
+      font-family: 'Syne', sans-serif; font-weight: 700;
+      padding: 12px 28px; border-radius: 100px; border: none; cursor: pointer;
+      font-size: 0.95rem; letter-spacing: 0.5px;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: var(--accent); color: #fff;
+      box-shadow: 0 4px 24px rgba(127,90,240,0.4);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(127,90,240,0.5); }
+    .btn-secondary {
+      background: transparent; color: var(--text);
+      border: 1.5px solid var(--border);
+    }
+    .btn-secondary:hover { border-color: var(--accent); }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .scanning-text { color: var(--muted); font-size: 0.85rem; display: none; }
+    .scanning-text.active { display: block; }
+
+    /* AI LOADER */
+    .ai-loading { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 0.9rem; }
+    .ai-dots span {
+      display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent); margin: 0 2px;
+      animation: dotBounce 1.2s ease-in-out infinite;
+    }
+    .ai-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .ai-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes dotBounce { 0%,80%,100%{transform:scale(0.6);opacity:0.4;} 40%{transform:scale(1);opacity:1;} }
+
+    /* ALERTS */
+    .alert {
+      grid-column: 1 / -1;
+      border-radius: 14px; padding: 14px 20px;
+      font-size: 0.9rem; display: none;
+    }
+    .alert.show { display: block; }
+    .alert-warn { background: rgba(251,191,36,0.12); border: 1px solid rgba(251,191,36,0.3); color: var(--warn); }
+    .alert-ok { background: rgba(44,182,125,0.12); border: 1px solid rgba(44,182,125,0.3); color: var(--accent2); }
+
+    /* HEARTBEAT ANIMATION */
+    @keyframes heartbeat { 0%,100%{transform:scale(1);} 14%{transform:scale(1.15);} 28%{transform:scale(1);} 42%{transform:scale(1.1);} }
+    .heartbeat-icon { display: inline-block; animation: heartbeat 1.2s ease-in-out infinite; }
+
+    @media(max-width:700px){
+      main { grid-template-columns: 1fr; }
+      #card-hr,#card-sleep,#card-bp,#card-spo2,#card-steps { grid-column: 1; }
+      #card-mood,#controls,.alert { grid-column: 1; }
+      header { padding: 16px 20px; }
+    }
+  </style>
+</head>
+<body>
+<div class="bg-blobs">
+  <div class="blob blob1"></div>
+  <div class="blob blob2"></div>
+  <div class="blob blob3"></div>
+</div>
+
+<header>
+  <div class="logo">Mood<span>Pulse</span></div>
+  <div class="status-dot"><div class="dot"></div> Live Health Monitor</div>
+</header>
+
+<main>
+  <!-- CONTROLS -->
+  <div id="controls">
+    <button class="btn btn-primary" id="btnScan" onclick="startScan()">▶ Start Scan</button>
+    <button class="btn btn-secondary" id="btnReset" onclick="resetAll()" disabled>↺ Reset</button>
+    <span class="scanning-text" id="scanningText">🔄 Scanning health metrics…</span>
+  </div>
+
+  <!-- ALERT -->
+  <div class="alert" id="alertBox"></div>
+
+  <!-- HEART RATE -->
+  <div class="card" id="card-hr">
+    <div class="card-label"><span class="heartbeat-icon">❤️</span> Heart Rate</div>
+    <div class="card-value hr-value" id="hrVal">--<span class="card-unit">bpm</span></div>
+    <div class="card-sub" id="hrStatus">Awaiting scan…</div>
+    <div class="hr-bar-wrap" id="hrBars">
+      <div class="hr-bar" style="height:10px"></div>
+      <div class="hr-bar" style="height:10px"></div>
+      <div class="hr-bar" style="height:10px"></div>
+      <div class="hr-bar" style="height:10px"></div>
+      <div class="hr-bar" style="height:10px"></div>
+      <div class="hr-bar" style="height:10px"></div>
+      <div class="hr-bar" style="height:10px"></div>
+      <div class="hr-bar" style="height:10px"></div>
+      <div class="hr-bar" style="height:10px"></div>
+      <div class="hr-bar" style="height:10px"></div>
+      <div class="hr-bar" style="height:10px"></div>
+      <div class="hr-bar" style="height:10px"></div>
+    </div>
+  </div>
+
+  <!-- SLEEP -->
+  <div class="card" id="card-sleep">
+    <div class="card-label">🌙 Sleep Quality</div>
+    <div class="card-value sleep-value" id="sleepVal">--<span class="card-unit">hrs</span></div>
+    <div class="card-sub" id="sleepStatus">Awaiting scan…</div>
+    <div class="sleep-ring-wrap">
+      <svg class="sleep-ring" width="100" height="100" viewBox="0 0 100 100">
+        <circle class="ring-bg" cx="50" cy="50" r="38"/>
+        <circle class="ring-fill" id="sleepRing" cx="50" cy="50" r="38"
+          stroke-dasharray="239" stroke-dashoffset="239"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- BLOOD PRESSURE -->
+  <div class="card" id="card-bp">
+    <div class="card-label">💉 Blood Pressure</div>
+    <div class="card-value bp-value" id="bpVal">--/--<span class="card-unit">mmHg</span></div>
+    <div class="card-sub" id="bpStatus">Awaiting scan…</div>
+    <div class="bp-bars">
+      <div class="bp-bar-group">
+        <div class="bp-bar-label">Systolic</div>
+        <div class="bp-track"><div class="bp-fill sys" id="bpSysFill" style="width:0%"></div></div>
+      </div>
+      <div class="bp-bar-group">
+        <div class="bp-bar-label">Diastolic</div>
+        <div class="bp-track"><div class="bp-fill dia" id="bpDiaFill" style="width:0%"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SPO2 -->
+  <div class="card" id="card-spo2">
+    <div class="card-label">🫁 SpO₂ Oxygen</div>
+    <div class="card-value spo2-value" id="spo2Val">--<span class="card-unit">%</span></div>
+    <div class="card-sub" id="spo2Status">Awaiting scan…</div>
+    <div style="margin-top:16px;">
+      <div style="height:10px;background:var(--card2);border-radius:6px;overflow:hidden;">
+        <div id="spo2Fill" style="width:0%;height:100%;border-radius:6px;background:linear-gradient(90deg,#60a5fa,#818cf8);transition:width 1s ease;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:0.7rem;color:var(--muted);">
+        <span>80%</span><span>90%</span><span>100%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEPS -->
+  <div class="card" id="card-steps">
+    <div class="card-label">👟 Daily Steps</div>
+    <div class="card-value steps-value" id="stepsVal">--</div>
+    <div class="card-sub" id="stepsStatus">Awaiting scan…</div>
+    <div class="steps-bar-outer"><div class="steps-bar-inner" id="stepsFill" style="width:0%"></div></div>
+    <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:0.7rem;color:var(--muted);">
+      <span>0</span><span>5k</span><span>10k</span>
+    </div>
+  </div>
+
+  <!-- MOOD CARD -->
+  <div class="card" id="card-mood">
+    <div class="card-label">🧠 AI Mood Analysis</div>
+    <div class="mood-header">
+      <div class="mood-emoji" id="moodEmoji">🤔</div>
+      <div>
+        <div class="mood-title" id="moodTitle">Waiting for scan…</div>
+        <div class="mood-sub" id="moodSub">Complete a health scan to detect your mood</div>
+      </div>
+    </div>
+    <div class="mood-message" id="moodMessage">
+      <span style="color:var(--muted);">Your AI mood companion will speak to you here based on your health data…</span>
+    </div>
+    <div class="mood-tags" id="moodTags"></div>
+    <div class="ai-loading" id="aiLoading" style="display:none;margin-top:12px;">
+      <div class="ai-dots"><span></span><span></span><span></span></div>
+      <span>AI is analyzing your health signals…</span>
+    </div>
+  </div>
+</main>
+
+<script>
+// ─── ANTHROPIC API CALL ───────────────────────────────────────────────────────
+async function callClaudeAPI(healthData) {
+  const prompt = `You are a warm, empathetic AI health companion. Based on the following health metrics, determine the person's mood and speak to them directly in a caring, supportive way.
+
+Health Data:
+- Heart Rate: ${healthData.hr} bpm
+- Sleep: ${healthData.sleep} hours
+- Blood Pressure: ${healthData.bpSys}/${healthData.bpDia} mmHg
+- SpO2: ${healthData.spo2}%
+- Daily Steps: ${healthData.steps}
+
+Instructions:
+1. Analyze these metrics holistically
+2. Determine if the person seems: Happy/Energetic, Stressed/Anxious, Tired/Fatigued, Sad/Low, Calm/Relaxed, or Neutral
+3. Respond ONLY with a JSON object (no markdown, no backticks):
+{
+  "mood": "one of: Happy, Stressed, Tired, Sad, Calm, Energetic",
+  "emoji": "one relevant emoji",
+  "score": number from 1-10 (10 = very happy),
+  "message": "A warm, 2-3 sentence personalized message speaking directly to the person about their mood and how to feel better or maintain their wellbeing. Use 'you' and be encouraging.",
+  "tags": ["3-4 short tags like: Low Energy, Needs Rest, High Spirits, etc."],
+  "alert": "empty string OR a brief health alert if something is concerning"
+}`;
+
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 1000,
+      messages: [{ role: "user", content: prompt }]
+    })
+  });
+  const data = await response.json();
+  const text = data.content.map(i => i.text || "").join("");
+  const clean = text.replace(/```json|```/g, "").trim();
+  return JSON.parse(clean);
+}
+
+// ─── SIMULATED METRICS ────────────────────────────────────────────────────────
+function generateMetrics() {
+  // Random but realistic ranges
+  const scenarios = [
+    { hr: 72, sleep: 7.5, bpSys: 118, bpDia: 76, spo2: 98, steps: 8200 },   // Happy
+    { hr: 98, sleep: 4.5, bpSys: 138, bpDia: 88, spo2: 96, steps: 3100 },   // Stressed
+    { hr: 58, sleep: 9.5, bpSys: 110, bpDia: 68, spo2: 99, steps: 1200 },   // Tired
+    { hr: 62, sleep: 5.5, bpSys: 122, bpDia: 80, spo2: 97, steps: 4500 },   // Sad
+    { hr: 65, sleep: 8.0, bpSys: 115, bpDia: 72, spo2: 99, steps: 9800 },   // Calm/Energetic
+    { hr: 88, sleep: 6.0, bpSys: 130, bpDia: 85, spo2: 96, steps: 6000 },   // Anxious
+  ];
+  return scenarios[Math.floor(Math.random() * scenarios.length)];
+}
+
+// ─── ANIMATE METRICS IN ───────────────────────────────────────────────────────
+function animateNumber(el, target, suffix, duration = 1200) {
+  const start = performance.now();
+  const update = (now) => {
+    const p = Math.min((now - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.round(target * ease);
+    if (p < 1) requestAnimationFrame(update);
+    else el.textContent = target;
+  };
+  requestAnimationFrame(update);
+}
+
+let scanning = false;
+
+async function startScan() {
+  if (scanning) return;
+  scanning = true;
+
+  document.getElementById('btnScan').disabled = true;
+  document.getElementById('btnReset').disabled = true;
+  document.getElementById('scanningText').classList.add('active');
+  document.getElementById('alertBox').classList.remove('show');
+  document.getElementById('moodMessage').innerHTML = '<span style="color:var(--muted);">Scanning…</span>';
+  document.getElementById('moodTags').innerHTML = '';
+  document.getElementById('moodTitle').textContent = 'Scanning…';
+  document.getElementById('moodSub').textContent = 'Reading your health signals';
+  document.getElementById('moodEmoji').textContent = '🔍';
+
+  const metrics = generateMetrics();
+  const delays = [400, 900, 1400, 1900, 2400];
+
+  // HR
+  setTimeout(() => {
+    const hrEl = document.getElementById('hrVal');
+    hrEl.innerHTML = `<span id="hrNum">--</span><span class="card-unit">bpm</span>`;
+    animateNumber(document.getElementById('hrNum'), metrics.hr, 'bpm');
+    const status = metrics.hr < 60 ? '🟡 Below Normal' : metrics.hr > 90 ? '🔴 Elevated' : '🟢 Normal';
+    document.getElementById('hrStatus').textContent = status;
+    // Animate bars
+    const bars = document.querySelectorAll('.hr-bar');
+    bars.forEach((b, i) => {
+      const h = 10 + Math.random() * (metrics.hr / 2);
+      b.style.height = h + 'px';
+    });
+  }, delays[0]);
+
+  // Sleep
+  setTimeout(() => {
+    const sleepEl = document.getElementById('sleepVal');
+    sleepEl.innerHTML = `${metrics.sleep}<span class="card-unit">hrs</span>`;
+    const status = metrics.sleep < 6 ? '🔴 Poor' : metrics.sleep > 9 ? '🟡 Oversleeping' : '🟢 Good';
+    document.getElementById('sleepStatus').textContent = status;
+    const pct = Math.min(metrics.sleep / 10, 1);
+    document.getElementById('sleepRing').style.strokeDashoffset = 239 - (239 * pct);
+  }, delays[1]);
+
+  // BP
+  setTimeout(() => {
+    document.getElementById('bpVal').innerHTML = `${metrics.bpSys}/${metrics.bpDia}<span class="card-unit">mmHg</span>`;
+    const status = metrics.bpSys > 130 ? '🔴 High' : metrics.bpSys < 110 ? '🟡 Low' : '🟢 Normal';
+    document.getElementById('bpStatus').textContent = status;
+    document.getElementById('bpSysFill').style.width = ((metrics.bpSys - 80) / 80 * 100) + '%';
+    document.getElementById('bpDiaFill').style.width = ((metrics.bpDia - 50) / 60 * 100) + '%';
+  }, delays[2]);
+
+  // SpO2
+  setTimeout(() => {
+    document.getElementById('spo2Val').innerHTML = `${metrics.spo2}<span class="card-unit">%</span>`;
+    const status = metrics.spo2 < 95 ? '🔴 Low' : '🟢 Normal';
+    document.getElementById('spo2Status').textContent = status;
+    document.getElementById('spo2Fill').style.width = ((metrics.spo2 - 80) / 20 * 100) + '%';
+  }, delays[3]);
+
+  // Steps
+  setTimeout(() => {
+    const stepsEl = document.getElementById('stepsVal');
+    stepsEl.innerHTML = `<span id="stepsNum">0</span>`;
+    animateNumber(document.getElementById('stepsNum'), metrics.steps, '');
+    const status = metrics.steps < 5000 ? '🔴 Low Activity' : metrics.steps > 8000 ? '🟢 Active!' : '🟡 Moderate';
+    document.getElementById('stepsStatus').textContent = status;
+    document.getElementById('stepsFill').style.width = Math.min(metrics.steps / 10000 * 100, 100) + '%';
+  }, delays[4]);
+
+  // AI Analysis
+  setTimeout(async () => {
+    document.getElementById('scanningText').classList.remove('active');
+    document.getElementById('aiLoading').style.display = 'flex';
+    document.getElementById('moodTitle').textContent = 'AI Analyzing…';
+
+    try {
+      const result = await callClaudeAPI(metrics);
+      document.getElementById('aiLoading').style.display = 'none';
+
+      // Mood colors
+      const moodColors = {
+        Happy: '#2cb67d', Energetic: '#fbbf24', Calm: '#60a5fa',
+        Stressed: '#f97316', Anxious: '#ef4565', Tired: '#94a1b2', Sad: '#818cf8', Neutral: '#94a1b2'
+      };
+      const c = moodColors[result.mood] || '#7f5af0';
+      document.getElementById('card-mood').style.borderColor = c;
+      document.getElementById('card-mood').style.boxShadow = `0 0 60px ${c}33`;
+
+      document.getElementById('moodEmoji').textContent = result.emoji;
+      document.getElementById('moodTitle').textContent = `Feeling ${result.mood}`;
+      document.getElementById('moodSub').textContent = `Mood Score: ${result.score}/10`;
+      document.getElementById('moodMessage').textContent = result.message;
+
+      const tagsEl = document.getElementById('moodTags');
+      tagsEl.innerHTML = (result.tags || []).map(t => `<span class="mood-tag">${t}</span>`).join('');
+
+      if (result.alert) {
+        const alertEl = document.getElementById('alertBox');
+        alertEl.className = 'alert alert-warn show';
+        alertEl.textContent = '⚠️ ' + result.alert;
+      } else {
+        const alertEl = document.getElementById('alertBox');
+        alertEl.className = 'alert alert-ok show';
+        alertEl.textContent = '✅ All vitals look within acceptable range.';
+      }
+    } catch(e) {
+      document.getElementById('aiLoading').style.display = 'none';
+      document.getElementById('moodTitle').textContent = 'Analysis Error';
+      document.getElementById('moodMessage').textContent = 'Could not connect to AI. Please try again.';
+    }
+
+    document.getElementById('btnReset').disabled = false;
+    scanning = false;
+  }, 3200);
+}
+
+function resetAll() {
+  document.getElementById('btnScan').disabled = false;
+  document.getElementById('btnReset').disabled = true;
+  document.getElementById('hrVal').innerHTML = '--<span class="card-unit">bpm</span>';
+  document.getElementById('hrStatus').textContent = 'Awaiting scan…';
+  document.getElementById('sleepVal').innerHTML = '--<span class="card-unit">hrs</span>';
+  document.getElementById('sleepStatus').textContent = 'Awaiting scan…';
+  document.getElementById('bpVal').innerHTML = '--/--<span class="card-unit">mmHg</span>';
+  document.getElementById('bpStatus').textContent = 'Awaiting scan…';
+  document.getElementById('spo2Val').innerHTML = '--<span class="card-unit">%</span>';
+  document.getElementById('spo2Status').textContent = 'Awaiting scan…';
+  document.getElementById('stepsVal').innerHTML = '--';
+  document.getElementById('stepsStatus').textContent = 'Awaiting scan…';
+  document.getElementById('sleepRing').style.strokeDashoffset = 239;
+  document.getElementById('bpSysFill').style.width = '0%';
+  document.getElementById('bpDiaFill').style.width = '0%';
+  document.getElementById('spo2Fill').style.width = '0%';
+  document.getElementById('stepsFill').style.width = '0%';
+  document.querySelector('#hrBars').querySelectorAll('.hr-bar').forEach(b => b.style.height = '10px');
+  document.getElementById('moodEmoji').textContent = '🤔';
+  document.getElementById('moodTitle').textContent = 'Waiting for scan…';
+  document.getElementById('moodSub').textContent = 'Complete a health scan to detect your mood';
+  document.getElementById('moodMessage').innerHTML = '<span style="color:var(--muted);">Your AI mood companion will speak to you here based on your health data…</span>';
+  document.getElementById('moodTags').innerHTML = '';
+  document.getElementById('alertBox').classList.remove('show');
+  document.getElementById('card-mood').style.borderColor = 'var(--accent)';
+  document.getElementById('card-mood').style.boxShadow = '0 0 60px var(--glow)';
+}
+</script>
+</body>
+</html>
